@@ -1,0 +1,290 @@
+import pygame
+import random
+import requests
+import numpy as np
+from io import BytesIO
+
+#Antoine
+DIRECTIONS = [(0,1),(0,-1),(1,0),(-1,0)]
+
+def neighbors(node): #node=tuple avec case vide égale à 0
+    index_case_vide = node.index(9)
+    i_vide, j_vide = index_case_vide//3, index_case_vide%3
+    l=[]
+    for i in range(len(DIRECTIONS)):
+        direction = DIRECTIONS[i]
+        new_tuple_l = list(node)
+        if direction[1] == 0: #mouvement horizontal
+            if 0 <= j_vide + direction[0] <= 2:
+                new_tuple_l[index_case_vide] = node[index_case_vide+direction[0]]
+                new_tuple_l[index_case_vide+direction[0]] = 9
+                l.append(tuple(new_tuple_l))
+        
+        elif direction[0] == 0: #mouvement vertical
+            if 0 <= i_vide + direction[1] <= 2:
+                new_tuple_l[index_case_vide] = node[index_case_vide+direction[1]*3]
+                new_tuple_l[index_case_vide+direction[1]*3] = 9
+                l.append(tuple(new_tuple_l))
+    
+    return l
+
+def random_board(nine=False):
+    pos=(1,2,3,4,5,6,7,8,9)
+    for _ in range(100):
+        voisins = neighbors(pos)
+        i=random.randint(0, len(voisins)-1)
+        pos=voisins[i]
+    arr = np.array(pos).reshape((3,3))
+    if not nine: 
+        arr = np.where(arr == 9, 0, arr)
+        return arr.tolist()
+    else:
+        return arr
+
+
+def cout_hamming(noeud):
+    somme = 0
+    for i in range(len(noeud)):
+        if noeud[i] != i+1:
+            somme += 1
+    return somme
+
+def hamming_pouxchiant(starting_node):
+    queue = [starting_node]
+    path = {starting_node : [starting_node]}
+    compteur = 0
+    while queue != [] and compteur <= 5000:
+        compteur += 1
+        sommet = queue[0]
+        del queue[0]
+        voisins = neighbors(sommet)
+        chemin = path[sommet]
+        for voisin in voisins:
+            if voisin == (1,2,3,4,5,6,7,8,9):
+                chemin += [voisin]
+                hint = list(chemin[1])
+                for i in range(len(hint)):
+                    if hint[i] == 9:
+                        hint[i] = 0
+                        break
+                return [[hint[0],hint[1],hint[2]],[hint[3],hint[4],hint[5]],[hint[6],hint[7],hint[8]]]
+            elif voisin not in path:
+                cout_voisin = cout_hamming(voisin)
+                place = False
+                for i in range(len(queue)):
+                    if cout_voisin < cout_hamming(queue[i]):
+                        queue = queue[:i]+[voisin]+queue[i:]
+                        place = True
+                        break
+                if place == False:
+                    queue.append(voisin)
+                path[voisin] = chemin + [voisin]
+    return "pas de solus"
+
+# Images
+def charger_image(url):
+    reponse = requests.get(url)
+    image = pygame.image.load(BytesIO(reponse.content))
+    return image
+
+cases = {1: (50, 50), 2: (190, 50), 3: (330, 50), 4: (50,190), 5: (190, 190), 6: (330, 190), 7: (50, 330), 8: (190, 330), 9: (330, 330)}
+matvic = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
+
+matchif = random_board()
+
+def zero(matchif):
+    for i in range(3):
+        for j in range(3):
+            if matchif[i][j]==0:
+                return j,i
+
+x0,y0=zero(matchif)
+
+
+
+grille = charger_image('https://is5-ssl.mzstatic.com/image/thumb/Purple128/v4/57/81/f4/5781f434-90a8-29ac-8cb4-fdf90142b5ef/source/512x512bb.jpg')
+grillevide= charger_image("https://i.ibb.co/7yMdhJx/512x512bbv3.jpg")
+un = charger_image('https://i.ibb.co/JtswBxR/output-onlinepngtools-2.png')
+deux= charger_image("https://i.ibb.co/NyYKKxf/output-onlinepngtools-3.png")
+trois= charger_image("https://i.ibb.co/58mkFXs/3.png")
+quatre= charger_image("https://i.ibb.co/cg7vCZf/4.png")
+cinq = charger_image("https://i.ibb.co/hVBtPQP/output-onlinepngtools.png")
+six=charger_image("https://i.ibb.co/0DbQKk6/6.png")
+sept= charger_image("https://i.ibb.co/FgWhpKk/7.png")
+huit= charger_image("https://i.ibb.co/0cpNnGB/8.png")
+image_victoire = charger_image('https://i.ibb.co/Jnj3gsW/VICTOIRE.png')
+images={1: un, 2: deux, 3: trois, 4: quatre, 5: cinq, 6: six, 7: sept, 8: huit}
+
+# Initialisation
+pygame.init()
+screen = pygame.display.set_mode((512, 512))
+clock = pygame.time.Clock()
+menu = True
+jeu = False
+pause = False
+victoire = False
+en_cours = True
+blanc = (255, 255, 255)
+noir = (0, 0, 0)
+gris_clair = (200, 200, 200)
+marron = (131, 75, 14)
+couleur = blanc
+
+# Définir la police
+police = pygame.font.Font(None, 36)
+policetitre = pygame.font.Font(None, 80)
+
+# Définir les propriétés des boutons
+bouton_Start = pygame.Rect(154, 220, 200, 40)
+contour_Start = pygame.Rect(150, 216, 208, 48)
+couleur_bouton = marron
+texte_bouton_Start = police.render("Start", True, noir)
+rect_texte_Start = texte_bouton_Start.get_rect(center=(254, 238))
+
+boutoncredit = pygame.Rect(154, 360, 200, 40)
+contour_credit = pygame.Rect(150, 356, 208, 48)
+texte_bouton2 = police.render("Credits", True, noir)
+rect_texte2 = texte_bouton2.get_rect(center=(250, 378))
+
+bouton_settings = pygame.Rect(154, 290, 200, 40)
+contour_settings = pygame.Rect(150, 286, 208, 48)
+texte_bouton3 = police.render("Settings", True, noir)
+rect_texte3 = texte_bouton3.get_rect(center=(256, 308))
+
+bouton_titre = pygame.Rect(106, 84, 300, 60)
+contour_titre = pygame.Rect(100, 80, 312, 68)
+texte_bouton4 = policetitre.render("Taquing", True, noir)
+rect_texte4 = texte_bouton4.get_rect(center=(250, 114))
+
+bouton_hint = pygame.Rect(364, 8, 100, 30)
+contour_hint = pygame.Rect(360, 4, 108, 38)
+texte_bouton_hint = police.render("Hint", True, noir)
+rect_texte_hint = texte_bouton_hint.get_rect(center=bouton_hint.center)
+
+bouton_pause = pygame.Rect(60, 8, 100, 30)
+contour_pause = pygame.Rect(56, 4, 108, 38)
+texte_bouton_pause = police.render("Pause", True, noir)
+rect_texte_pause = texte_bouton_pause.get_rect(center=bouton_pause.center)
+
+bouton_resume = pygame.Rect(154, 220, 200, 40)
+contour_resume = pygame.Rect(150, 216, 208, 48)
+texte_bouton_resume = police.render("Resume", True, noir)
+rect_texte_resume = texte_bouton_resume.get_rect(center=bouton_resume.center)
+
+
+bouton_menu=pygame.Rect(364, 464, 100, 40)
+contour_menu = pygame.Rect(360, 460, 108, 48)
+texte_menu = police.render("Menu", True, noir)
+rect_txt_menu = texte_menu.get_rect(center=bouton_menu.center)
+        
+
+while en_cours:
+    clock.tick(800)
+    if menu:
+        screen.blit(grille, (0, 0))
+        pygame.draw.rect(screen, noir, contour_credit)
+        pygame.draw.rect(screen, noir, contour_Start)
+        pygame.draw.rect(screen, noir, contour_settings)
+        pygame.draw.rect(screen, noir, contour_titre)
+        pygame.draw.rect(screen, couleur_bouton, bouton_settings)
+        pygame.draw.rect(screen, couleur_bouton, boutoncredit)
+        pygame.draw.rect(screen, couleur_bouton, bouton_titre)
+        pygame.draw.rect(screen, couleur_bouton, bouton_Start)
+        screen.blit(texte_bouton3, rect_texte3)
+        screen.blit(texte_bouton_Start, rect_texte_Start)
+        screen.blit(texte_bouton2, rect_texte2)
+        screen.blit(texte_bouton4, rect_texte4)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            en_cours = False
+        if jeu and event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP and y0 < 2 :
+                matchif[y0][x0], matchif[y0 + 1][x0] = matchif[y0 + 1][x0], matchif[y0][x0]
+                y0 += 1
+            if event.key == pygame.K_DOWN and y0 >0:
+                matchif[y0][x0], matchif[y0 - 1][x0] = matchif[y0 - 1][x0], matchif[y0][x0]
+                y0 -=1
+            if event.key == pygame.K_LEFT and x0 < 2:
+                matchif[y0][x0], matchif[y0][x0 + 1] = matchif[y0][x0 + 1], matchif[y0][x0]
+                x0 += 1
+            if event.key == pygame.K_RIGHT and x0 > 0:
+                matchif[y0][x0], matchif[y0][x0 - 1] = matchif[y0][x0 - 1], matchif[y0][x0]
+                x0 -= 1
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if menu:
+                if bouton_Start.collidepoint(event.pos):
+                    menu = False
+                    temps_debut = pygame.time.get_ticks()
+                    jeu = True
+            if jeu:
+                if bouton_pause.collidepoint(event.pos):
+                    jeu = False
+                    pause = True
+            if pause:
+                if bouton_resume.collidepoint(event.pos):
+                    jeu = True
+                    pause = False
+                    temps_pause = temps_actuel - temps_ecoule - temps_debut
+                    temps_debut = temps_debut + temps_pause
+            if victoire:
+                if bouton_menu.collidepoint(event.pos):
+                    menu = True
+                    victoire= False
+                    matchif = random_board()
+                    x0,y0=zero(matchif)
+            if jeu:
+                if bouton_hint.collidepoint(event.pos):
+                    board=np.array(matchif)
+                    matchif=np.where(board == 0, 9, board)
+                    matchif = hamming_pouxchiant(tuple(matchif.reshape((1,9)).tolist()[0]))
+                    x0,y0 = zero(matchif)
+
+    if jeu:
+        screen.blit(grillevide, (0, 0))
+        temps_actuel = pygame.time.get_ticks()
+        temps_ecoule = temps_actuel - temps_debut
+        temps_ecoule_secondes = temps_ecoule // 1000
+        texte_temps = police.render(f"Temps écoulé : {temps_ecoule_secondes} s", True, (0, 0, 0))
+        rect_texte = texte_temps.get_rect(center=(170, 485))
+        screen.blit(texte_temps, rect_texte)
+        pygame.draw.rect(screen, noir, contour_hint)
+        pygame.draw.rect(screen, couleur_bouton, bouton_hint)
+        screen.blit(texte_bouton_hint, rect_texte_hint)
+        pygame.draw.rect(screen, noir, contour_pause)
+        pygame.draw.rect(screen, couleur_bouton, bouton_pause)
+        screen.blit(texte_bouton_pause, rect_texte_pause)
+        
+        for i in range(0,3):
+            for j in range(0,3):
+                if matchif[i][j] != 0:
+                    screen.blit(images[matchif[i][j]], cases[j+1+i*3])
+                    
+    if pause:
+        screen.blit(grille, (0, 0))
+        temps_actuel = pygame.time.get_ticks()
+        pygame.draw.rect(screen, noir, contour_resume)
+        pygame.draw.rect(screen, couleur_bouton, bouton_resume)
+        screen.blit(texte_bouton_resume, rect_texte_resume)
+        texte_temps = police.render(f"Temps écoulé : {temps_ecoule_secondes} s", True, (0, 0, 0))
+        rect_texte = texte_temps.get_rect(center=(170, 485))
+        screen.blit(texte_temps, rect_texte)
+
+
+    if matchif == matvic and jeu:
+        victoire = True
+        jeu = False
+    
+    if victoire:
+        screen.blit(image_victoire, (0,0))
+        pygame.draw.rect(screen, noir, contour_menu)
+        pygame.draw.rect(screen, couleur_bouton, bouton_menu)
+        screen.blit(texte_menu, rect_txt_menu)
+        texte_temps = police.render(f"Temps écoulé : {temps_ecoule_secondes} s", True, blanc)
+        rect_texte = texte_temps.get_rect(center=(170, 485))
+        screen.blit(texte_temps, rect_texte)
+
+        
+
+    pygame.display.update()
+        
+pygame.quit()
