@@ -6,7 +6,8 @@ from io import BytesIO
 
 pygame.display.set_caption("Taquing")
 
-#Antoine
+# Cette partie crée une grille de taquin à partir de la grille résolue en effectuant 100 déplacements aléatoirement
+
 DIRECTIONS = [(0,1),(0,-1),(1,0),(-1,0)]
 
 def neighbors(node): #node=tuple avec case vide égale à 0
@@ -43,6 +44,7 @@ def random_board(nine=False):
     else:
         return arr
 
+# Cette partie prend en entrée une grille, effectue un déplacement dans le but de se rapprocher de la victoire et renvoie la grille
 
 def cout_hamming(noeud):
     somme = 0
@@ -83,26 +85,12 @@ def hamming_pouxchiant(starting_node):
                 path[voisin] = chemin + [voisin]
     return "pas de solus"
 
-# Images
+# On télécharge des images à l'aide d'url
+
 def charger_image(url):
     reponse = requests.get(url)
     image = pygame.image.load(BytesIO(reponse.content))
     return image
-
-cases = {1: (50, 50), 2: (190, 50), 3: (330, 50), 4: (50,190), 5: (190, 190), 6: (330, 190), 7: (50, 330), 8: (190, 330), 9: (330, 330)}
-matvic = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
-
-matchif = random_board()
-
-def zero(matchif):
-    for i in range(3):
-        for j in range(3):
-            if matchif[i][j]==0:
-                return j,i
-
-x0,y0=zero(matchif)
-
-
 
 grille = charger_image('https://is5-ssl.mzstatic.com/image/thumb/Purple128/v4/57/81/f4/5781f434-90a8-29ac-8cb4-fdf90142b5ef/source/512x512bb.jpg')
 grillevide= charger_image("https://i.ibb.co/7yMdhJx/512x512bbv3.jpg")
@@ -115,9 +103,31 @@ six=charger_image("https://i.ibb.co/0DbQKk6/6.png")
 sept= charger_image("https://i.ibb.co/FgWhpKk/7.png")
 huit= charger_image("https://i.ibb.co/0cpNnGB/8.png")
 image_victoire = charger_image('https://i.ibb.co/Jnj3gsW/VICTOIRE.png')
+
+# on associe à chaque chiffre une image
 images={1: un, 2: deux, 3: trois, 4: quatre, 5: cinq, 6: six, 7: sept, 8: huit}
 
+# on note dans un dictionnaire la position des cases dans la fenêtre
+cases = {1: (50, 50), 2: (190, 50), 3: (330, 50), 4: (50,190), 5: (190, 190), 6: (330, 190), 7: (50, 330), 8: (190, 330), 9: (330, 330)}
+
+# on crée une grille de départ et la grille résolue
+matvic = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
+matchif = random_board()
+
+# on trouve la position du zéro dans la grille de départ
+def zero(matchif):
+    for i in range(3):
+        for j in range(3):
+            if matchif[i][j]==0:
+                return j,i
+
+x0,y0=zero(matchif)
+
+
+
 # Initialisation
+# on définit des paramètres et des booléens pour créer des boutons
+
 pygame.init()
 screen = pygame.display.set_mode((512, 512))
 clock = pygame.time.Clock()
@@ -130,10 +140,8 @@ credits = False
 en_cours = True
 blanc = (255, 255, 255)
 noir = (0, 0, 0)
-gris_clair = (200, 200, 200)
 marron = (131, 75, 14)
-couleur = blanc
-
+couleur_bouton = marron
 
 # Définir la police
 police = pygame.font.Font(None, 36)
@@ -141,9 +149,9 @@ policecredit = pygame.font.Font(None, 50)
 policetitre = pygame.font.Font(None, 80)
 
 # Définir les propriétés des boutons
+
 bouton_Start = pygame.Rect(154, 220, 200, 40)
 contour_Start = pygame.Rect(150, 216, 208, 48)
-couleur_bouton = marron
 texte_bouton_Start = police.render("Start", True, noir)
 rect_texte_Start = texte_bouton_Start.get_rect(center=(254, 238))
 
@@ -182,33 +190,19 @@ contour_resume = pygame.Rect(150, 216, 208, 48)
 texte_bouton_resume = police.render("Resume", True, noir)
 rect_texte_resume = texte_bouton_resume.get_rect(center=bouton_resume.center)
 
-
 bouton_menu=pygame.Rect(364, 464, 100, 40)
 contour_menu = pygame.Rect(360, 460, 108, 48)
 texte_menu = police.render("Menu", True, noir)
 rect_txt_menu = texte_menu.get_rect(center=bouton_menu.center)
         
+# la boucle du jeu
 
 while en_cours:
     clock.tick(800)
-    if menu:
-        screen.blit(grille, (0, 0))
-        pygame.draw.rect(screen, noir, contour_credit)
-        pygame.draw.rect(screen, noir, contour_Start)
-        pygame.draw.rect(screen, noir, contour_settings)
-        pygame.draw.rect(screen, noir, contour_titre)
-        pygame.draw.rect(screen, couleur_bouton, bouton_settings)
-        pygame.draw.rect(screen, couleur_bouton, boutoncredit)
-        pygame.draw.rect(screen, couleur_bouton, bouton_titre)
-        pygame.draw.rect(screen, couleur_bouton, bouton_Start)
-        screen.blit(texte_bouton3, rect_texte3)
-        screen.blit(texte_bouton_Start, rect_texte_Start)
-        screen.blit(texte_bouton2, rect_texte2)
-        screen.blit(texte_bouton4, rect_texte4)
-        if not settings:
-            pygame.draw.rect(screen, noir, contour_settings)
-            pygame.draw.rect(screen, couleur_bouton, bouton_non)
-            screen.blit(texte_boutonnon, rect_textenon)
+    # On récupère les évènements, il y en a deux types.
+    # Ce sont soit des boutons qui sont cliqués et dans ce cas la valeur de certains booléens changent
+    # Soit on a appuyé sur une flèche directionnelle, par exemple la flèche du haut, dans ce cas on échange la case vide avec celle en-dessous
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             en_cours = False
@@ -216,7 +210,7 @@ while en_cours:
             if event.key == pygame.K_UP and y0 < 2 :
                 matchif[y0][x0], matchif[y0 + 1][x0] = matchif[y0 + 1][x0], matchif[y0][x0]
                 y0 += 1
-            if event.key == pygame.K_DOWN and y0 >0:
+            if event.key == pygame.K_DOWN and y0 > 0:
                 matchif[y0][x0], matchif[y0 - 1][x0] = matchif[y0 - 1][x0], matchif[y0][x0]
                 y0 -=1
             if event.key == pygame.K_LEFT and x0 < 2:
@@ -263,6 +257,26 @@ while en_cours:
                     victoire= False
                     matchif = random_board()
                     x0,y0=zero(matchif)
+                    
+    # Ce qu'on affiche dans la fenêtre dépend de la valeur des booléens
+    if menu:
+        screen.blit(grille, (0, 0))
+        pygame.draw.rect(screen, noir, contour_credit)
+        pygame.draw.rect(screen, noir, contour_Start)
+        pygame.draw.rect(screen, noir, contour_settings)
+        pygame.draw.rect(screen, noir, contour_titre)
+        pygame.draw.rect(screen, couleur_bouton, bouton_settings)
+        pygame.draw.rect(screen, couleur_bouton, boutoncredit)
+        pygame.draw.rect(screen, couleur_bouton, bouton_titre)
+        pygame.draw.rect(screen, couleur_bouton, bouton_Start)
+        screen.blit(texte_bouton3, rect_texte3)
+        screen.blit(texte_bouton_Start, rect_texte_Start)
+        screen.blit(texte_bouton2, rect_texte2)
+        screen.blit(texte_bouton4, rect_texte4)
+        if not settings:
+            pygame.draw.rect(screen, noir, contour_settings)
+            pygame.draw.rect(screen, couleur_bouton, bouton_non)
+            screen.blit(texte_boutonnon, rect_textenon)
 
 
     if jeu:
@@ -295,7 +309,6 @@ while en_cours:
         rect_texte = texte_temps.get_rect(center=(170, 485))
         screen.blit(texte_temps, rect_texte)
 
-
     if matchif == matvic and jeu:
         victoire = True
         jeu = False
@@ -308,6 +321,7 @@ while en_cours:
         texte_temps = police.render(f"Temps écoulé : {temps_ecoule_secondes} s", True, blanc)
         rect_texte = texte_temps.get_rect(center=(170, 485))
         screen.blit(texte_temps, rect_texte)
+        
     if credits:
         screen.blit(grillevide, (0,0))
         ligne1 = "Avec la participation de :"
@@ -358,8 +372,7 @@ while en_cours:
         pygame.draw.rect(screen, couleur_bouton, bouton_menu)
         screen.blit(texte_menu, rect_txt_menu)
         
-        
-
+    
     pygame.display.update()
         
 pygame.quit()
