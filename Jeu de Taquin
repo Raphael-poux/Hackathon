@@ -123,6 +123,8 @@ menu = True
 jeu = False
 pause = False
 victoire = False
+settings = True
+credits = False
 en_cours = True
 blanc = (255, 255, 255)
 noir = (0, 0, 0)
@@ -130,8 +132,10 @@ gris_clair = (200, 200, 200)
 marron = (131, 75, 14)
 couleur = blanc
 
+
 # Définir la police
 police = pygame.font.Font(None, 36)
+policecredit = pygame.font.Font(None, 50)
 policetitre = pygame.font.Font(None, 80)
 
 # Définir les propriétés des boutons
@@ -150,6 +154,11 @@ bouton_settings = pygame.Rect(154, 290, 200, 40)
 contour_settings = pygame.Rect(150, 286, 208, 48)
 texte_bouton3 = police.render("Settings", True, noir)
 rect_texte3 = texte_bouton3.get_rect(center=(256, 308))
+
+bouton_non = pygame.Rect(154, 290, 200, 40)
+contour_non = pygame.Rect(150, 286, 208, 48)
+texte_boutonnon = police.render("Non", True, noir)
+rect_textenon = texte_boutonnon.get_rect(center=(256, 308))
 
 bouton_titre = pygame.Rect(106, 84, 300, 60)
 contour_titre = pygame.Rect(100, 80, 312, 68)
@@ -194,6 +203,10 @@ while en_cours:
         screen.blit(texte_bouton_Start, rect_texte_Start)
         screen.blit(texte_bouton2, rect_texte2)
         screen.blit(texte_bouton4, rect_texte4)
+        if not settings:
+            pygame.draw.rect(screen, noir, contour_settings)
+            pygame.draw.rect(screen, couleur_bouton, bouton_non)
+            screen.blit(texte_boutonnon, rect_textenon)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             en_cours = False
@@ -209,17 +222,32 @@ while en_cours:
                 x0 += 1
             if event.key == pygame.K_RIGHT and x0 > 0:
                 matchif[y0][x0], matchif[y0][x0 - 1] = matchif[y0][x0 - 1], matchif[y0][x0]
-                x0 -= 1
+                x0 -= 1          
         if event.type == pygame.MOUSEBUTTONDOWN:
             if menu:
                 if bouton_Start.collidepoint(event.pos):
                     menu = False
                     temps_debut = pygame.time.get_ticks()
                     jeu = True
+                if boutoncredit.collidepoint(event.pos): 
+                    menu = False
+                    credits = True
+                if bouton_settings.collidepoint(event.pos):
+                    settings = False
+            if credits:
+                if bouton_menu.collidepoint(event.pos):
+                    menu = True
+                    credits = False
+                    settings = True
             if jeu:
                 if bouton_pause.collidepoint(event.pos):
                     jeu = False
                     pause = True
+                if bouton_hint.collidepoint(event.pos):
+                    board=np.array(matchif)
+                    matchif=np.where(board == 0, 9, board)
+                    matchif = hamming_pouxchiant(tuple(matchif.reshape((1,9)).tolist()[0]))
+                    x0,y0 = zero(matchif)
             if pause:
                 if bouton_resume.collidepoint(event.pos):
                     jeu = True
@@ -229,15 +257,11 @@ while en_cours:
             if victoire:
                 if bouton_menu.collidepoint(event.pos):
                     menu = True
+                    settings = True
                     victoire= False
                     matchif = random_board()
                     x0,y0=zero(matchif)
-            if jeu:
-                if bouton_hint.collidepoint(event.pos):
-                    board=np.array(matchif)
-                    matchif=np.where(board == 0, 9, board)
-                    matchif = hamming_pouxchiant(tuple(matchif.reshape((1,9)).tolist()[0]))
-                    x0,y0 = zero(matchif)
+
 
     if jeu:
         screen.blit(grillevide, (0, 0))
@@ -282,7 +306,56 @@ while en_cours:
         texte_temps = police.render(f"Temps écoulé : {temps_ecoule_secondes} s", True, blanc)
         rect_texte = texte_temps.get_rect(center=(170, 485))
         screen.blit(texte_temps, rect_texte)
-
+    if credits:
+        screen.blit(grillevide, (0,0))
+        ligne1 = "Avec la participation de :"
+        ligne1_surface = policecredit.render(ligne1, True, (0, 0, 0))
+        ligne1_rect = ligne1_surface.get_rect(center=(244, 64))
+        ligne2 = "Kylian Mbappé"
+        ligne2_surface = policecredit.render(ligne2, True, (0, 0, 0))
+        ligne2_rect = ligne2_surface.get_rect(center=(244, 104))
+        ligne3 = "ChatGPT"
+        ligne3_surface = policecredit.render(ligne3, True, (0, 0, 0))
+        ligne3_rect = ligne3_surface.get_rect(center=(244, 144))
+        ligne4 = "Les Sandwichs"
+        ligne4_surface = policecredit.render(ligne4, True, (0, 0, 0))
+        ligne4_rect = ligne4_surface.get_rect(center=(244, 184))
+        ligne5 = "Raphaël Poux"
+        ligne5_surface = policecredit.render(ligne5, True, (0, 0, 0))
+        ligne5_rect = ligne5_surface.get_rect(center=(244, 224))
+        ligne6 = "Titouan Lestanguet"
+        ligne6_surface = policecredit.render(ligne6, True, (0, 0, 0))
+        ligne6_rect = ligne6_surface.get_rect(center=(244, 264))
+        ligne7 = "Antoine Fondeur"
+        ligne7_surface = policecredit.render(ligne7, True, (0, 0, 0))
+        ligne7_rect = ligne7_surface.get_rect(center=(244, 304))
+        ligne8 = "Baptiste Piar"
+        ligne8_surface = policecredit.render(ligne8, True, (0, 0, 0))
+        ligne8_rect = ligne8_surface.get_rect(center=(244, 344))
+        ligne9 = "Sponsor: Taha"
+        ligne9_surface = policecredit.render(ligne9, True, (0, 0, 0))
+        ligne9_rect = ligne9_surface.get_rect(center=(244, 384))
+        ligne10 = "Valérie Roy"
+        ligne10_surface = policecredit.render(ligne10, True, (0, 0, 0))
+        ligne10_rect = ligne10_surface.get_rect(center=(244, 424))
+        ligne11 = "Flash Mcqueen "
+        ligne11_surface = policecredit.render(ligne11, True, (0, 0, 0))
+        ligne11_rect = ligne11_surface.get_rect(center=(244, 464))
+        screen.blit(ligne1_surface, ligne1_rect)
+        screen.blit(ligne2_surface, ligne2_rect)
+        screen.blit(ligne3_surface, ligne3_rect)
+        screen.blit(ligne4_surface, ligne4_rect)
+        screen.blit(ligne5_surface, ligne5_rect)
+        screen.blit(ligne6_surface, ligne6_rect)
+        screen.blit(ligne7_surface, ligne7_rect)
+        screen.blit(ligne8_surface, ligne8_rect)
+        screen.blit(ligne9_surface, ligne9_rect)
+        screen.blit(ligne10_surface, ligne10_rect)
+        screen.blit(ligne11_surface, ligne11_rect)
+        pygame.draw.rect(screen, noir, contour_menu)
+        pygame.draw.rect(screen, couleur_bouton, bouton_menu)
+        screen.blit(texte_menu, rect_txt_menu)
+        
         
 
     pygame.display.update()
